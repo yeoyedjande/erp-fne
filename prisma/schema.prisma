@@ -1,0 +1,811 @@
+// Markel CRM — schéma de données
+// Montants : entiers en francs CFA (XOF est une devise sans décimale).
+// Taux et remises : Float en pourcentage (18 = 18 %).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Énumérations ───────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  SALES
+  SUPPORT
+  CLIENT
+}
+
+enum CompanyStatus {
+  PROSPECT
+  CLIENT
+  PARTENAIRE
+  INACTIF
+}
+
+enum CompanyTier {
+  STRATEGIQUE
+  CLE
+  STANDARD
+  PETIT
+}
+
+enum OpportunityStage {
+  NOUVEAU
+  QUALIFIE
+  PROPOSITION
+  NEGOCIATION
+  GAGNE
+  PERDU
+}
+
+enum QuoteStatus {
+  BROUILLON
+  ENVOYE
+  ACCEPTE
+  REFUSE
+  EXPIRE
+}
+
+enum InvoiceStatus {
+  BROUILLON
+  EMISE
+  PARTIELLE
+  PAYEE
+  EN_RETARD
+  ANNULEE
+}
+
+/// Cycle de certification auprès de la plateforme FNE de la DGI.
+enum FneStatus {
+  NON_SOUMISE
+  EN_ATTENTE
+  CERTIFIEE
+  REJETEE
+  AVOIR_EMIS
+}
+
+/// `template` de l'API FNE : nature fiscale du client.
+enum FneTemplate {
+  B2B // client entreprise ou professionnel possédant un NCC
+  B2C // client particulier
+  B2G // institution gouvernementale
+  B2F // client à l'international
+}
+
+/// `invoiceType` de l'API FNE.
+enum FneInvoiceType {
+  SALE     // vente
+  PURCHASE // bordereau d'achat de produits agricoles
+}
+
+/// `paymentMethod` de l'API FNE.
+enum PaymentMethod {
+  CASH          // espèces
+  CARD          // carte bancaire
+  CHECK         // chèque
+  MOBILE_MONEY  // mobile money
+  TRANSFER      // virement bancaire
+  DEFERRED      // à terme
+}
+
+/// `taxes` de l'API FNE. Les taux vivent dans src/lib/fne/constants.ts.
+enum VatCode {
+  TVA  // TVA normale 18 %
+  TVAB // TVA réduite 9 %
+  TVAC // exonération conventionnelle 0 %
+  TVAD // exonération légale 0 % (TEE, RME)
+}
+
+enum ProjectStatus {
+  CADRAGE
+  EN_COURS
+  EN_PAUSE
+  LIVRE
+  CLOTURE
+  ANNULE
+}
+
+enum ProjectHealth {
+  BON
+  VIGILANCE
+  CRITIQUE
+}
+
+enum TaskStatus {
+  A_FAIRE
+  EN_COURS
+  EN_REVUE
+  TERMINE
+}
+
+enum TicketStatus {
+  NOUVEAU
+  EN_COURS
+  EN_ATTENTE_CLIENT
+  RESOLU
+  CLOS
+}
+
+enum TicketPriority {
+  P1
+  P2
+  P3
+  P4
+}
+
+enum ActivityType {
+  APPEL
+  EMAIL
+  REUNION
+  NOTE
+  TACHE
+}
+
+enum ActivityStatus {
+  PLANIFIEE
+  TERMINEE
+  ANNULEE
+}
+
+// ─────────────────────────── Organisation ───────────────────────────
+
+/// Identité fiscale de Markel Technology — singleton (id = "org").
+model Organization {
+  id                  String  @id @default("org")
+  name                String
+  legalName           String
+  ncc                 String // numéro de compte contribuable (DGI)
+  rccm                String
+  taxRegime           String  @default("Réel Normal d'Imposition")
+  addressLine         String
+  city                String  @default("Abidjan")
+  country             String  @default("Côte d'Ivoire")
+  phone               String
+  email               String
+  website             String?
+  bankName            String?
+  bankAccount         String?
+  defaultPointOfSale  String  @default("01")
+  defaultEstablishment String @default("Siège Abidjan-Plateau")
+  commercialMessage   String?
+  invoiceFooter       String?
+  /// Solde de stickers électroniques restant (renvoyé par l'API FNE).
+  fneStickerBalance   Int     @default(0)
+  updatedAt           DateTime @updatedAt
+}
+
+// ─────────────────────────── Utilisateurs ───────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(SALES)
+  jobTitle     String?
+  phone        String?
+  /// Jeton de couleur pour l'avatar : "brand" | "violet" | "teal" | "success" | "warning" | "danger"
+  accentToken  String   @default("brand")
+  active       Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  /// Pour un compte CLIENT : la société qu'il représente sur le portail.
+  clientCompanyId String?
+  clientCompany   Company? @relation("CompanyPortalUsers", fields: [clientCompanyId], references: [id], onDelete: SetNull)
+
+  ownedCompanies      Company[]      @relation("CompanyOwner")
+  ownedContacts       Contact[]      @relation("ContactOwner")
+  ownedOpportunities  Opportunity[]  @relation("OpportunityOwner")
+  quotes              Quote[]
+  invoices            Invoice[]
+  managedProjects     Project[]      @relation("ProjectManager")
+  projectMemberships  ProjectMember[]
+  assignedTasks       Task[]         @relation("TaskAssignee")
+  timeEntries         TimeEntry[]
+  assignedTickets     Ticket[]       @relation("TicketAssignee")
+  ticketMessages      TicketMessage[]
+  activities          Activity[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
+  fneLogs             FneLog[]
+  creditNotes         CreditNote[]
+
+  @@index([role])
+  @@index([clientCompanyId])
+}
+
+// ─────────────────────── Sociétés & contacts ────────────────────────
+
+model Company {
+  id          String        @id @default(cuid())
+  name        String
+  legalName   String?
+  /// Numéro de compte contribuable — obligatoire pour facturer en B2B.
+  ncc         String?
+  rccm        String?
+  industry    String
+  size        String        @default("PME")
+  status      CompanyStatus @default(PROSPECT)
+  tier        CompanyTier   @default(STANDARD)
+  /// Nature fiscale par défaut, pilote le `template` FNE des factures.
+  fneTemplate FneTemplate   @default(B2B)
+  website     String?
+  email       String?
+  phone       String?
+  addressLine String?
+  city        String        @default("Abidjan")
+  country     String        @default("Côte d'Ivoire")
+  source      String?
+  tags        String[]      @default([])
+  notes       String?
+  ownerId     String?
+  owner       User?         @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  contacts      Contact[]
+  opportunities Opportunity[]
+  quotes        Quote[]
+  invoices      Invoice[]
+  projects      Project[]
+  tickets       Ticket[]
+  activities    Activity[]
+  portalUsers   User[]        @relation("CompanyPortalUsers")
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([name])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  mobile    String?
+  jobTitle  String?
+  isPrimary Boolean  @default(false)
+  linkedin  String?
+  notes     String?
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ownerId   String?
+  owner     User?    @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  opportunities Opportunity[]
+  quotes        Quote[]
+  tickets       Ticket[]
+  activities    Activity[]
+
+  @@index([companyId])
+  @@index([email])
+}
+
+// ───────────────────────────── Pipeline ─────────────────────────────
+
+model Opportunity {
+  id                String           @id @default(cuid())
+  reference         String           @unique
+  title             String
+  description       String?
+  stage             OpportunityStage @default(NOUVEAU)
+  /// Montant estimé HT, en XOF.
+  amount            Int              @default(0)
+  probability       Int              @default(10)
+  expectedCloseDate DateTime
+  closedAt          DateTime?
+  lostReason        String?
+  source            String?
+  companyId         String
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId         String?
+  contact           Contact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  ownerId           String?
+  owner             User?            @relation("OpportunityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  quotes     Quote[]
+  projects   Project[]
+  activities Activity[]
+
+  @@index([stage])
+  @@index([companyId])
+  @@index([ownerId])
+}
+
+// ───────────────────────── Catalogue d'offres ───────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  description String?
+  category    String
+  /// Prix unitaire HT en XOF.
+  unitPrice   Int
+  /// Unité de mesure transmise à l'API FNE (`measurementUnit`).
+  unit        String   @default("forfait")
+  vatCode     VatCode  @default(TVA)
+  recurring   Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  quoteLines   QuoteLine[]
+  invoiceLines InvoiceLine[]
+
+  @@index([category])
+}
+
+// ─────────────────────────────── Devis ──────────────────────────────
+
+model Quote {
+  id            String      @id @default(cuid())
+  number        String      @unique
+  title         String
+  status        QuoteStatus @default(BROUILLON)
+  issueDate     DateTime    @default(now())
+  validUntil    DateTime
+  /// Remise commerciale globale, en pourcentage.
+  discount      Float       @default(0)
+  notes         String?
+  terms         String?
+  sentAt        DateTime?
+  decidedAt     DateTime?
+  refusalReason String?
+
+  companyId     String
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId     String?
+  contact       Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  ownerId       String?
+  owner         User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  lines    QuoteLine[]
+  invoices Invoice[]
+
+  @@index([status])
+  @@index([companyId])
+}
+
+model QuoteLine {
+  id          String   @id @default(cuid())
+  quoteId     String
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  position    Int      @default(0)
+  reference   String?
+  description String
+  quantity    Float    @default(1)
+  unitPrice   Int
+  discount    Float    @default(0)
+  unit        String   @default("forfait")
+  vatCode     VatCode  @default(TVA)
+
+  @@index([quoteId])
+}
+
+// ────────────────────── Factures & conformité FNE ───────────────────
+
+model Invoice {
+  id        String        @id @default(cuid())
+  /// Numéro interne Markel (MT-F-2026-0001). La référence normalisée
+  /// délivrée par la DGI est stockée dans `fneReference`.
+  number    String        @unique
+  title     String
+  status    InvoiceStatus @default(BROUILLON)
+  issueDate DateTime      @default(now())
+  dueDate   DateTime
+  discount  Float         @default(0)
+  notes     String?
+  paidAmount Int          @default(0)
+
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  quoteId       String?
+  quote         Quote?   @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  projectId     String?
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  ownerId       String?
+  owner         User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  // ── Champs exigés par l'API FNE ────────────────────────────────
+  fneStatus       FneStatus      @default(NON_SOUMISE)
+  fneInvoiceType  FneInvoiceType @default(SALE)
+  fneTemplate     FneTemplate    @default(B2B)
+  paymentMethod   PaymentMethod  @default(TRANSFER)
+  isRne           Boolean        @default(false)
+  rne             String?
+  pointOfSale     String         @default("01")
+  establishment   String         @default("Siège Abidjan-Plateau")
+  commercialMessage String?
+  footer            String?
+  foreignCurrency   String?
+  foreignCurrencyRate Float      @default(0)
+
+  /// Instantané du client au moment de l'émission — une facture est un document figé.
+  clientNcc         String?
+  clientCompanyName String
+  clientPhone       String
+  clientEmail       String
+  clientSellerName  String?
+
+  // ── Retour de la plateforme FNE ────────────────────────────────
+  /// Référence normalisée, ex. 9606123E25000000019
+  fneReference       String?  @unique
+  /// Code de vérification (uuid) converti en QR code
+  fneToken           String?
+  fneVerificationUrl String?
+  /// Identifiant de la facture côté FNE, requis pour émettre un avoir
+  fneRemoteId        String?
+  fneCertifiedAt     DateTime?
+  fneStickerBalance  Int?
+  fneWarning         Boolean  @default(false)
+  fneError           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines       InvoiceLine[]
+  customTaxes InvoiceCustomTax[]
+  payments    Payment[]
+  creditNotes CreditNote[]
+  fneLogs     FneLog[]
+  activities  Activity[]
+
+  @@index([status])
+  @@index([fneStatus])
+  @@index([companyId])
+  @@index([issueDate])
+}
+
+model InvoiceLine {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  position    Int      @default(0)
+  reference   String?
+  description String
+  quantity    Float    @default(1)
+  /// Prix unitaire HT (`amount` dans le contrat FNE).
+  unitPrice   Int
+  discount    Float    @default(0)
+  /// `measurementUnit` dans le contrat FNE.
+  unit        String   @default("forfait")
+  vatCode     VatCode  @default(TVA)
+  /// Identifiant de l'article renvoyé par la FNE — indispensable pour cibler un avoir.
+  fneItemId   String?
+
+  customTaxes     InvoiceCustomTax[]
+  creditNoteLines CreditNoteLine[]
+
+  @@index([invoiceId])
+}
+
+/// Taxes spécifiques du contrat FNE (AIRSI, GRA, DTD…), applicables
+/// soit à une ligne, soit au pied de facture.
+model InvoiceCustomTax {
+  id     String  @id @default(cuid())
+  name   String
+  /// Taux en pourcentage.
+  rate   Float
+  invoiceId String?
+  invoice   Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  lineId    String?
+  line      InvoiceLine? @relation(fields: [lineId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([lineId])
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Int
+  method    PaymentMethod @default(TRANSFER)
+  reference String?
+  paidAt    DateTime      @default(now())
+  note      String?
+  createdAt DateTime      @default(now())
+
+  @@index([invoiceId])
+}
+
+/// Facture d'avoir — API FNE #2, POST /external/invoices/{id}/refund
+model CreditNote {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  reason      String
+  issuedAt    DateTime @default(now())
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  /// Référence d'avoir renvoyée par la DGI, préfixée « A ».
+  fneReference       String?
+  fneToken           String?
+  fneVerificationUrl String?
+  fneStickerBalance  Int?
+  fneError           String?
+  certifiedAt        DateTime?
+
+  lines CreditNoteLine[]
+
+  @@index([invoiceId])
+}
+
+model CreditNoteLine {
+  id            String      @id @default(cuid())
+  creditNoteId  String
+  creditNote    CreditNote  @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  invoiceLineId String
+  invoiceLine   InvoiceLine @relation(fields: [invoiceLineId], references: [id], onDelete: Cascade)
+  quantity      Float
+
+  @@index([creditNoteId])
+}
+
+/// Journal de tous les échanges avec la plateforme FNE.
+/// La clé API n'y figure jamais.
+model FneLog {
+  id           String   @id @default(cuid())
+  endpoint     String
+  method       String   @default("POST")
+  mode         String   @default("mock") // "mock" | "live"
+  statusCode   Int
+  success      Boolean
+  durationMs   Int
+  requestBody  Json?
+  responseBody Json?
+  errorCode    String?
+  errorMessage String?
+  invoiceId    String?
+  invoice      Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+// ──────────────────────── Projets & delivery ────────────────────────
+
+model Project {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  name          String
+  description   String?
+  status        ProjectStatus @default(CADRAGE)
+  health        ProjectHealth @default(BON)
+  startDate     DateTime
+  endDate       DateTime
+  /// Budget vendu HT, en XOF.
+  budget        Int           @default(0)
+  progress      Int           @default(0)
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  opportunityId String?
+  opportunity   Opportunity?  @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  managerId     String?
+  manager       User?         @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  members     ProjectMember[]
+  tasks       Task[]
+  timeEntries TimeEntry[]
+  invoices    Invoice[]
+  activities  Activity[]
+
+  @@index([status])
+  @@index([companyId])
+}
+
+model ProjectMember {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleLabel String  @default("Consultant")
+  /// Taux journalier moyen facturé, en XOF.
+  dailyRate Int     @default(0)
+
+  @@unique([projectId, userId])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(A_FAIRE)
+  priority    Int        @default(2)
+  dueDate     DateTime?
+  estimate    Float      @default(0)
+  projectId   String
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  timeEntries TimeEntry[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskId      String?
+  task        Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  date        DateTime
+  hours       Float
+  billable    Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@index([userId, date])
+}
+
+// ─────────────────────────── Support client ─────────────────────────
+
+model Ticket {
+  id          String         @id @default(cuid())
+  number      String         @unique
+  subject     String
+  description String
+  status      TicketStatus   @default(NOUVEAU)
+  priority    TicketPriority @default(P3)
+  category    String         @default("Incident")
+  /// Échéance SLA calculée à la création — voir SLA_HOURS.
+  slaDueAt    DateTime
+  resolvedAt  DateTime?
+  companyId   String
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  assigneeId  String?
+  assignee    User?          @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  messages   TicketMessage[]
+  activities Activity[]
+
+  @@index([status])
+  @@index([companyId])
+  @@index([priority])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName String
+  body      String
+  /// Note interne, invisible depuis le portail client.
+  internal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+// ───────────────────── Activités & collaboration ────────────────────
+
+model Activity {
+  id          String         @id @default(cuid())
+  type        ActivityType
+  subject     String
+  description String?
+  status      ActivityStatus @default(PLANIFIEE)
+  dueAt       DateTime
+  doneAt      DateTime?
+  ownerId     String?
+  owner       User?          @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  companyId     String?
+  company       Company?     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId     String?
+  contact       Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  ticketId      String?
+  ticket        Ticket?      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  projectId     String?
+  project       Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  invoiceId     String?
+  invoice       Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, dueAt])
+  @@index([status])
+  @@index([companyId])
+}
+
+// ──────────────── Contenus de la vitrine & administration ───────────
+
+model ContentPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  subtitle  String?
+  body      String
+  section   String   @default("page")
+  position  Int      @default(0)
+  published Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([section, position])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  label     String
+  group     String   @default("Général")
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userLabel String
+  action    String
+  entity    String
+  entityId  String?
+  summary   String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  href      String?
+  tone      String   @default("info")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}

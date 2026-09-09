@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   JETONS — source de vérité : design/FICHE-DESIGN.md
+   Aucune de ces valeurs ne doit être recopiée dans un composant.
+   ========================================================================= */
+:root {
+  color-scheme: light;
+
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --surface-2: #f4f1ec;
+  --surface-3: #eae6df;
+
+  --ink: #1a1815;
+  --ink-2: #3d3934;
+  --ink-3: #6b655c;
+  --ink-4: #8c857a;
+
+  --line: #e8e4dd;
+  --line-2: #d8d2c8;
+
+  --brand: #163a6e;
+  --brand-2: #0e2547;
+  --brand-3: #2b5ca8;
+  --brand-4: #7fa3d6;
+  --brand-soft: #eef3fb;
+
+  /* Réservé strictement à la conformité FNE */
+  --gold: #8a6410;
+  --gold-2: #b8860b;
+  --gold-soft: #faf3e2;
+
+  --success: #15734e;
+  --success-soft: #e8f3ee;
+  --warning: #9a6212;
+  --warning-soft: #fbf1df;
+  --danger: #a32b23;
+  --danger-soft: #fbebe9;
+  --violet: #5b3e9e;
+  --violet-soft: #f1ecfb;
+  --teal: #0f6b70;
+  --teal-soft: #e5f2f2;
+
+  --shadow-1: 0 1px 2px rgba(26, 24, 21, 0.04), 0 1px 3px rgba(26, 24, 21, 0.03);
+  --shadow-2: 0 4px 12px rgba(26, 24, 21, 0.06), 0 2px 4px rgba(26, 24, 21, 0.04);
+  --shadow-3: 0 24px 48px rgba(26, 24, 21, 0.12), 0 8px 16px rgba(26, 24, 21, 0.06);
+
+  --sidebar-w: 248px;
+  --topbar-h: 60px;
+}
+
+@layer base {
+  * { border-color: var(--line); }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: theme("fontFamily.sans");
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Chiffres alignés partout où ils comptent */
+  .tnum, table, input[type="number"] { font-variant-numeric: tabular-nums; }
+
+  ::selection { background: var(--brand-soft); color: var(--brand-2); }
+
+  :focus-visible {
+    outline: 2px solid var(--brand-3);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* La barre de défilement suit la grammaire de filets, pas d'ombre */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-2);
+    border: 3px solid var(--bg);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+}
+
+@layer components {
+  /* Micro-libellé en capitales — en-têtes de table, intitulés de champ */
+  .eyebrow {
+    @apply text-2xs font-semibold uppercase text-ink-3;
+  }
+
+  .card {
+    @apply rounded-md border border-line bg-surface shadow-1;
+  }
+
+  .field {
+    @apply w-full rounded border border-line-2 bg-surface px-3 py-2 text-base text-ink
+           transition-colors duration-150 placeholder:text-ink-4
+           focus:border-brand-3 focus:outline-none;
+  }
+  .field:disabled { @apply cursor-not-allowed bg-surface-2 text-ink-4; }
+
+  /* Squelette de chargement : mêmes filets, jamais d'ombre */
+  .skeleton {
+    @apply rounded bg-surface-2;
+    animation: pulse-soft 1.6s var(--tw-ease, cubic-bezier(0.4, 0, 0.6, 1)) infinite;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.32s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   IMPRESSION — facture normalisée. Le sticker FNE doit rester lisible.
+   ========================================================================= */
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+  html, body { background: #fff; }
+  .no-print { display: none !important; }
+  .print-plain { border: 0 !important; box-shadow: none !important; }
+  .page-break { break-after: page; }
+  a[href]::after { content: ""; }
+}
