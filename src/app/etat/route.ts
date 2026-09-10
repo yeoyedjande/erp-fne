@@ -18,6 +18,12 @@ export async function GET() {
     statut: "ok" | "degrade" | "hors-service";
     base: { urlPresente: boolean; joignable: boolean; migree: boolean; peuplee: boolean };
     auth: { secretPresent: boolean; trustHost: boolean; urlPublique: string | null };
+    deploiement: {
+      commit: string | null;
+      branche: string | null;
+      depot: string | null;
+      messageCommit: string | null;
+    };
     fne: { mode: string; cleConfiguree: boolean };
     latenceMs: number;
     message?: string;
@@ -28,6 +34,17 @@ export async function GET() {
       secretPresent: Boolean(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
       trustHost: process.env.AUTH_TRUST_HOST === "true",
       urlPublique: process.env.NEXTAUTH_URL ?? null,
+    },
+    // Railway injecte ces variables au build. Elles disent quel commit tourne
+    // réellement : le seul moyen de trancher entre « le code n'est pas déployé »
+    // et « le code est déployé mais ne fait pas ce qu'on croit ».
+    deploiement: {
+      commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+      branche: process.env.RAILWAY_GIT_BRANCH ?? null,
+      depot: process.env.RAILWAY_GIT_REPO_OWNER && process.env.RAILWAY_GIT_REPO_NAME
+        ? `${process.env.RAILWAY_GIT_REPO_OWNER}/${process.env.RAILWAY_GIT_REPO_NAME}`
+        : null,
+      messageCommit: process.env.RAILWAY_GIT_COMMIT_MESSAGE?.split("\n")[0] ?? null,
     },
     fne: { mode: getMode(), cleConfiguree: hasApiKey() },
     latenceMs: 0,

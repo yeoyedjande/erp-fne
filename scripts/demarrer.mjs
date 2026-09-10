@@ -22,6 +22,23 @@ import { spawn } from "node:child_process";
 
 const PORT = process.env.PORT || "3000";
 
+/* Identité du code réellement déployé, imprimée en tête des journaux.
+   Sans elle, impossible de distinguer « le correctif ne marche pas » de
+   « le correctif n'est pas déployé » — la confusion nous a coûté deux jours. */
+const commit = process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7);
+const branche = process.env.RAILWAY_GIT_BRANCH;
+const depot =
+  process.env.RAILWAY_GIT_REPO_OWNER && process.env.RAILWAY_GIT_REPO_NAME
+    ? `${process.env.RAILWAY_GIT_REPO_OWNER}/${process.env.RAILWAY_GIT_REPO_NAME}`
+    : null;
+
+console.log("\n─────────────────────────────────────────────");
+console.log("  Markel CRM — démarrage");
+console.log(`  dépôt   : ${depot ?? "(inconnu — hors Railway)"}`);
+console.log(`  branche : ${branche ?? "(inconnue)"}`);
+console.log(`  commit  : ${commit ?? "(inconnu)"}`);
+console.log("─────────────────────────────────────────────");
+
 function run(command, args, label) {
   return new Promise((resolve, reject) => {
     console.log(`\n▸ ${label}`);

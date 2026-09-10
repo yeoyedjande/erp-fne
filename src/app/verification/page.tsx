@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { PublicFooter, PublicHeader } from "@/components/PublicChrome";
 import { Icon } from "@/components/ui/Icon";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Vérifier une facture" };
 
 async function verify(formData: FormData) {
