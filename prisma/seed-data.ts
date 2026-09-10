@@ -6,7 +6,7 @@ export const ORG = {
   ncc: "2418562M",
   rccm: "CI-ABJ-2018-B-14237",
   taxRegime: "Réel Normal d'Imposition",
-  addressLine: "Immeuble Alpha 2000, 12e étage — Rue du Commerce, Plateau",
+  addressLine: "Riviera Palmeraie, Immeuble Walebo 1, 3e étage, bureau 1D — Cocody",
   city: "Abidjan",
   country: "Côte d'Ivoire",
   phone: "+225 27 20 31 45 60",
@@ -15,7 +15,7 @@ export const ORG = {
   bankName: "Société Générale Côte d'Ivoire",
   bankAccount: "CI93 0161 0100 0074 2185 6201 88",
   defaultPointOfSale: "01",
-  defaultEstablishment: "Siège Abidjan-Plateau",
+  defaultEstablishment: "Siège Abidjan-Cocody",
   commercialMessage: "Markel Technology — l'ingénierie logicielle au service des entreprises ivoiriennes.",
   invoiceFooter:
     "Règlement à 30 jours. Pénalité de retard de 1,5 % par mois entamé. Facture certifiée par la plateforme FNE de la DGI.",

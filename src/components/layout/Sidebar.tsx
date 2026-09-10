@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { Icon } from "@/components/ui/Icon";
+import { Wordmark } from "@/components/Logo";
 import type { NavGroup } from "@/lib/navigation";
 
 /**
@@ -27,14 +28,8 @@ function NavContent({
 
   return (
     <nav className="flex h-full flex-col">
-      <div className="flex h-[--topbar-h] shrink-0 items-center gap-2.5 border-b border-line px-4">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white">
-          <Icon name="code" size={16} strokeWidth={2} />
-        </span>
-        <span className="leading-tight">
-          <span className="block font-display text-md font-semibold text-ink">Markel</span>
-          <span className="block text-2xs uppercase tracking-[0.14em] text-ink-4">Technology</span>
-        </span>
+      <div className="flex h-[--topbar-h] shrink-0 items-center border-b border-line px-4">
+        <Wordmark href="/tableau-de-bord" size={30} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">

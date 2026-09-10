@@ -239,7 +239,7 @@ async function main() {
       issueDate,
       validUntil: shift(q.issued + QUOTE_VALIDITY_DAYS),
       discount: q.discount,
-      notes: "Prestations réalisées depuis les locaux de Markel Technology, Abidjan-Plateau.",
+      notes: "Prestations réalisées depuis les locaux de Markel Technology, Abidjan-Cocody.",
       terms: `Validité ${QUOTE_VALIDITY_DAYS} jours. Règlement à ${PAYMENT_TERMS_DAYS} jours date de facture. TVA 18 % sauf mention contraire.`,
       sentAt: q.status === "BROUILLON" ? null : issueDate,
       decidedAt: ["ACCEPTE", "REFUSE"].includes(q.status) ? shift(q.issued + int(6, 20)) : null,
@@ -886,7 +886,7 @@ async function seedContent() {
       slug: "a-propos", section: "page", position: 1,
       title: "Markel Technology",
       subtitle: "L'ingénierie logicielle au service des entreprises ivoiriennes",
-      body: "Fondée à Abidjan en 2018, Markel Technology accompagne banques, opérateurs, industriels et institutions publiques dans la conception, l'intégration et l'exploitation de leurs systèmes d'information. Nos quarante collaborateurs interviennent depuis le Plateau, au plus près de vos équipes.",
+      body: "Fondée à Abidjan en 2018, Markel Technology accompagne banques, opérateurs, industriels et institutions publiques dans la conception, l'intégration et l'exploitation de leurs systèmes d'information. Nos quarante collaborateurs interviennent depuis la Riviera Palmeraie, à Cocody, au plus près de vos équipes.",
     },
   ];
   for (const p of PAGES) {

@@ -243,6 +243,53 @@ ne quitte le serveur.
 
 ---
 
+## Identité de marque
+
+### Logo
+
+Le logo vit à un seul endroit : **`public/logo-markel.svg`**. Le composant
+`src/components/Logo.tsx` l'expose à toute la plateforme — vitrine, back-office,
+page de connexion, portail client et en-tête des factures imprimées.
+
+> ⚠️ **Le fichier actuellement présent est un substitut.** Le logo officiel m'a
+> été montré mais son fichier n'a pas atteint le dépôt : ni les couleurs exactes
+> ni le monogramme manuscrit n'ont pu être repris. Le substitut ne reproduit que
+> la géométrie observable (tuile bleue à angles arrondis, pastille rouge) et
+> assume de ne pas imiter le monogramme.
+
+**Pour installer le logo officiel** : remplacer `public/logo-markel.svg` par le
+fichier vectoriel, en conservant le nom. Aucun code à modifier. Si l'original
+n'existe qu'en PNG, le déposer sous `public/logo-markel.png` et changer
+l'extension dans la constante `SOURCE` de `src/components/Logo.tsx`.
+
+### Couleurs
+
+La palette de `design/FICHE-DESIGN.md` a été conçue avant réception du logo.
+Le bleu de marque (`--brand: #163a6e`) est un bleu profond choisi pour tenir les
+contrastes AA sur du texte (10:1 sur fond clair). Le bleu du logo est plus vif
+et ne passerait pas ce seuil en corps de texte.
+
+Une fois le fichier officiel disponible, deux options :
+
+1. **Conserver la palette actuelle** — le logo garde ses couleurs propres, la
+   plateforme les siennes. C'est l'état actuel, et c'est acceptable.
+2. **Aligner la palette sur le logo** — reprendre la teinte exacte du logo pour
+   `--brand-3` (accents vifs, graphiques) et en dériver une nuance sombre pour
+   `--brand` (texte, boutons). Cela demande de revérifier les contrastes de
+   chaque jeton.
+
+Le choix appartient à la marque ; il n'a pas été fait unilatéralement.
+
+### Adresse
+
+L'identité fiscale — raison sociale, NCC, RCCM, adresse, téléphone — est stockée
+dans la table `Organization` et **jamais codée en dur**. Elle alimente le pied de
+page public, les factures et les charges utiles transmises à la FNE. Elle se
+modifie depuis Administration → Identité de l'entreprise.
+
+Siège : Riviera Palmeraie, Immeuble Walebo 1, 3e étage, bureau 1D — Cocody,
+Abidjan, Côte d'Ivoire.
+
 ## Sécurité des dépendances
 
 `npm audit` doit rester à **zéro vulnérabilité** : Railway refuse de construire

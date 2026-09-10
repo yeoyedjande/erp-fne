@@ -6,6 +6,7 @@ import { PAYMENT_METHOD_LABELS, TEMPLATE_LABELS, VAT_LABELS } from "@/lib/fne/co
 import { LATE_PENALTY_MONTHLY } from "@/lib/business";
 import { formatDate, formatNumber, formatXOF } from "@/lib/format";
 import { FneSticker } from "@/components/FneSticker";
+import { LogoMark } from "@/components/Logo";
 import { PrintButton } from "./PrintButton";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,10 @@ export default async function InvoicePrint({ params }: { params: Promise<{ id: s
         {/* En-tête */}
         <header className="flex flex-wrap items-start justify-between gap-6 border-b border-line pb-6">
           <div>
-            <p className="font-display text-xl font-semibold text-ink">{org.legalName}</p>
+            <div className="mb-3 flex items-center gap-3">
+              <LogoMark size={44} />
+              <p className="font-display text-xl font-semibold text-ink">{org.legalName}</p>
+            </div>
             <p className="mt-2 max-w-xs text-sm leading-relaxed text-ink-3">
               {org.addressLine}
               <br />

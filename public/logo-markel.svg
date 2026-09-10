@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SUBSTITUT — à remplacer par le logo officiel de Markel Technology.
+
+  Seule la géométrie observable est reproduite ici : la tuile bleue à angles
+  arrondis et la pastille rouge en haut à droite. Le monogramme manuscrit de la
+  marque n'est PAS reproduit : le tracer de mémoire aurait produit une marque
+  faussement ressemblante, ce qui est pire qu'un substitut assumé.
+
+  Le bleu (#1279BE) et le rouge (#E8332A) sont estimés à l'œil et doivent être
+  confirmés sur le fichier source.
+
+  Remplacer ce fichier, en conservant son nom, suffit à propager le logo
+  officiel dans toute la plateforme.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img"
+     aria-label="Markel Technology">
+  <rect width="64" height="64" rx="14" fill="#1279BE"/>
+  <text x="32" y="44" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="34" font-style="italic" font-weight="600" fill="#ffffff">M</text>
+  <circle cx="50" cy="15" r="5" fill="#E8332A"/>
+</svg>
