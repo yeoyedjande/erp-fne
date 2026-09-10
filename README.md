@@ -218,6 +218,33 @@ ne quitte le serveur.
 
 ---
 
+## Sécurité des dépendances
+
+`npm audit` doit rester à **zéro vulnérabilité** : Railway refuse de construire
+une image qui en contient de niveau critique.
+
+Deux dépendances transitives sont contraintes dans `package.json` → `overrides`,
+parce que leurs parents les épinglent :
+
+| Paquet | Pourquoi | À retirer quand |
+|---|---|---|
+| `postcss` → `$postcss` | `next@15.5.25` épingle `postcss@8.4.31`, vulnérable ([GHSA-fxqj-rqcc-2cmp](https://github.com/advisories/GHSA-fxqj-rqcc-2cmp) et suivants). L'override aligne toute la chaîne sur la version saine déclarée en devDependency. | Passage à Next 16, qui embarque un postcss corrigé. |
+| `deepmerge-ts` → `8.0.2` | `@prisma/config` tire `deepmerge-ts <8`, sujet à une exhaustion de pile ([GHSA-ggr8-5vv4-36mx](https://github.com/advisories/GHSA-ggr8-5vv4-36mx)). Chargeur de configuration du CLI, jamais atteint à l'exécution. | Prisma publiera une 6.x alignée sur `deepmerge-ts@8`. |
+
+Prisma reste volontairement en **6.19.3**. Prisma 7 supprime `url` du bloc
+`datasource` au profit d'un adaptateur de driver et d'un `prisma.config.ts` :
+c'est une réécriture de la couche d'accès aux données, à mener comme un chantier
+propre et non dans un correctif de sécurité.
+
+Après toute montée de version :
+
+```bash
+npm audit                 # doit afficher 0 vulnérabilité
+npx tsc --noEmit
+npm run build
+npm run verify:fne        # 12 contrôles de la chaîne FNE
+```
+
 ## Architecture
 
 ```
