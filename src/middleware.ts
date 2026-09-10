@@ -4,9 +4,11 @@ import { authConfig } from "./auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-/** Routes ouvertes sans session. Tout le reste exige une authentification. */
+/** Routes ouvertes sans session. Tout le reste exige une authentification.
+ *  `/etat` doit en faire partie : c'est le point de contrôle interrogé par la
+ *  plateforme d'hébergement, qui n'a pas de session. */
 const PUBLIC = [
-  "/", "/connexion", "/verification", "/acces-refuse",
+  "/", "/connexion", "/verification", "/acces-refuse", "/etat",
 ];
 
 const isPublic = (path: string) =>

@@ -170,17 +170,42 @@ Deux chemins. Le premier ne demande aucune ligne de commande.
    | `AUTH_SECRET` | sortie de `openssl rand -base64 32` |
    | `AUTH_TRUST_HOST` | `true` |
    | `FNE_MODE` | `mock` |
-   | `SEED_ON_DEPLOY` | `true` — **au premier déploiement seulement** |
+   | `DATABASE_URL` | **`${{Postgres.DATABASE_URL}}`** — référence obligatoire, voir ci-dessous |
+   | `SEED_ON_DEPLOY` | facultatif : `false` pour ne jamais charger la démonstration |
    | `NEXTAUTH_URL` | à renseigner à l'étape 5 |
+
+   > **`DATABASE_URL` n'est pas injectée automatiquement.** Ajouter un service
+   > PostgreSQL au projet ne suffit pas : Railway ne partage pas ses variables
+   > avec les autres services. Il faut créer explicitement la référence
+   > `DATABASE_URL=${{Postgres.DATABASE_URL}}` dans le service applicatif
+   > (en remplaçant `Postgres` par le nom exact de votre service de base).
 
 4. Onglet **Settings → Networking → Generate Domain**.
 5. Ajoutez `NEXTAUTH_URL=https://<votre-domaine>.up.railway.app`, puis redéployez.
 6. **Repassez `SEED_ON_DEPLOY` à `false`** (ou supprimez la variable) pour que les
    déploiements suivants ne rejouent plus le jeu de démonstration.
 
-`railway.json` déclare en pré-déploiement `prisma migrate deploy`, suivi du seed
-uniquement si `SEED_ON_DEPLOY=true`. Les migrations passent donc avant chaque
-démarrage, sans intervention.
+Les migrations sont jouées par la **commande de démarrage**
+(`scripts/demarrer.mjs`), et non par un `preDeployCommand` : c'est le seul point
+d'entrée dont l'exécution est garantie quelle que soit la plateforme. Le script
+applique `prisma migrate deploy`, charge le jeu de démonstration si la base ne
+contient aucun compte, puis lance Next.js. Une base absente ou injoignable
+interrompt le démarrage avec un message explicite plutôt que de servir une
+application cassée.
+
+### Diagnostiquer un déploiement
+
+`GET /etat` répond en JSON, sans authentification, et sert de healthcheck :
+
+```json
+{ "statut": "ok",
+  "base": { "urlPresente": true, "joignable": true, "migree": true, "peuplee": true },
+  "fne":  { "mode": "mock", "cleConfiguree": false } }
+```
+
+`statut` vaut `ok`, `degrade` (schéma présent mais aucun compte) ou
+`hors-service` (base absente ou non migrée, réponse 503). Le champ `message`
+indique alors quoi corriger. Ni l'URL de la base ni la clé API n'y figurent.
 
 ### B. Depuis votre poste, avec la CLI
 
