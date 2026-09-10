@@ -17,12 +17,18 @@ export async function GET() {
   const diagnostic: {
     statut: "ok" | "degrade" | "hors-service";
     base: { urlPresente: boolean; joignable: boolean; migree: boolean; peuplee: boolean };
+    auth: { secretPresent: boolean; trustHost: boolean; urlPublique: string | null };
     fne: { mode: string; cleConfiguree: boolean };
     latenceMs: number;
     message?: string;
   } = {
     statut: "hors-service",
     base: { urlPresente: Boolean(process.env.DATABASE_URL), joignable: false, migree: false, peuplee: false },
+    auth: {
+      secretPresent: Boolean(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET),
+      trustHost: process.env.AUTH_TRUST_HOST === "true",
+      urlPublique: process.env.NEXTAUTH_URL ?? null,
+    },
     fne: { mode: getMode(), cleConfiguree: hasApiKey() },
     latenceMs: 0,
   };
@@ -57,6 +63,15 @@ export async function GET() {
       diagnostic.message =
         "Le schéma est en place mais aucun compte n'existe : le jeu de démonstration " +
         "n'a pas été chargé. Redéployez, ou lancez « npm run db:seed ».";
+      return NextResponse.json(diagnostic, { status: 200 });
+    }
+
+    if (!diagnostic.auth.secretPresent) {
+      diagnostic.statut = "degrade";
+      diagnostic.message =
+        "AUTH_SECRET n'est pas défini : aucune connexion ne peut aboutir, même avec " +
+        "les bons identifiants. Ajoutez AUTH_SECRET (openssl rand -base64 32) et " +
+        "AUTH_TRUST_HOST=true dans les variables du service.";
       return NextResponse.json(diagnostic, { status: 200 });
     }
 

@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function PortalHome() {
   const user = await requirePortalUser();
 
-  const [company, invoices, tickets, projects] = await Promise.all([
+  const [company, invoices, tickets, projects, org] = await Promise.all([
     prisma.company.findUniqueOrThrow({ where: { id: user.clientCompanyId } }),
     prisma.invoice.findMany({
       // Le portail ne montre jamais un brouillon interne.
@@ -33,6 +33,7 @@ export default async function PortalHome() {
       where: { companyId: user.clientCompanyId, status: { notIn: ["ANNULE"] } },
       orderBy: { endDate: "asc" },
     }),
+    prisma.organization.findUnique({ where: { id: "org" } }),
   ]);
 
   const withTotals = invoices.map((i) => ({ inv: i, total: totalsOf(i as never).total }));
@@ -158,11 +159,11 @@ export default async function PortalHome() {
             <CardHeader title="Votre contact" icon="users" />
             <p className="text-base text-ink-2">
               Une question sur une facture ou un projet ? Écrivez à{" "}
-              <a href="mailto:contact@markel-technology.ci" className="text-brand hover:underline">
-                contact@markel-technology.ci
+              <a href={`mailto:${org?.email ?? ""}`} className="text-brand hover:underline">
+                {org?.email ?? ""}
               </a>{" "}
               ou appelez le{" "}
-              <span className="font-mono text-sm tabular-nums">+225 27 20 31 45 60</span>.
+              <span className="font-mono text-sm tabular-nums">{org?.phone ?? ""}</span>.
             </p>
             <p className="mt-3 flex items-start gap-2 text-sm leading-relaxed text-ink-3">
               <Icon name="seal" size={14} className="mt-0.5 shrink-0 text-gold" />

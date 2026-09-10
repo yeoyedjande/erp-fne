@@ -53,6 +53,18 @@ if (!process.env.DATABASE_URL) {
   ]);
 }
 
+if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+  echec("AUTH_SECRET n'est pas défini", [
+    "Sans ce secret, Auth.js ne peut ni signer ni vérifier les sessions : toute",
+    "tentative de connexion échoue, y compris avec les bons identifiants.",
+    "",
+    "Dans le service applicatif → onglet Variables, ajoutez :",
+    "",
+    "    AUTH_SECRET=<sortie de : openssl rand -base64 32>",
+    "    AUTH_TRUST_HOST=true",
+  ]);
+}
+
 try {
   await run("npx", ["prisma", "migrate", "deploy"], "Application des migrations");
 } catch (e) {

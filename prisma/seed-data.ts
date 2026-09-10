@@ -9,9 +9,9 @@ export const ORG = {
   addressLine: "Riviera Palmeraie, Immeuble Walebo 1, 3e étage, bureau 1D — Cocody",
   city: "Abidjan",
   country: "Côte d'Ivoire",
-  phone: "+225 27 20 31 45 60",
-  email: "contact@markel-technology.ci",
-  website: "https://markel-technology.ci",
+  phone: "+225 05 46 58 03 17",
+  email: "info@markel-tech.com",
+  website: "https://markel-tech.com",
   bankName: "Société Générale Côte d'Ivoire",
   bankAccount: "CI93 0161 0100 0074 2185 6201 88",
   defaultPointOfSale: "01",
@@ -24,32 +24,32 @@ export const ORG = {
 
 export const USERS = [
   {
-    email: "admin@markel-technology.ci", name: "Yédjané Yeo", role: "SUPER_ADMIN",
+    email: "admin@markel-tech.com", name: "Yédjané Yeo", role: "SUPER_ADMIN",
     jobTitle: "Directeur Général", phone: "+225 07 07 12 34 56",
     password: "Admin2026!", accentToken: "brand",
   },
   {
-    email: "gestion@markel-technology.ci", name: "Aïcha Koné", role: "MANAGER",
+    email: "gestion@markel-tech.com", name: "Aïcha Koné", role: "MANAGER",
     jobTitle: "Directrice des Opérations", phone: "+225 07 08 45 12 90",
     password: "Gestion2026!", accentToken: "violet",
   },
   {
-    email: "commercial@markel-technology.ci", name: "Bakary Traoré", role: "SALES",
+    email: "commercial@markel-tech.com", name: "Bakary Traoré", role: "SALES",
     jobTitle: "Responsable Commercial", phone: "+225 05 64 23 78 11",
     password: "Commercial2026!", accentToken: "teal",
   },
   {
-    email: "support@markel-technology.ci", name: "Fatou Diallo", role: "SUPPORT",
+    email: "support@markel-tech.com", name: "Fatou Diallo", role: "SUPPORT",
     jobTitle: "Ingénieure Support N2", phone: "+225 01 42 09 66 32",
     password: "Support2026!", accentToken: "warning",
   },
   {
-    email: "seydou.ouattara@markel-technology.ci", name: "Seydou Ouattara", role: "MANAGER",
+    email: "seydou.ouattara@markel-tech.com", name: "Seydou Ouattara", role: "MANAGER",
     jobTitle: "Directeur Technique", phone: "+225 07 11 88 44 21",
     password: "Gestion2026!", accentToken: "success",
   },
   {
-    email: "nadia.bamba@markel-technology.ci", name: "Nadia Bamba", role: "SALES",
+    email: "nadia.bamba@markel-tech.com", name: "Nadia Bamba", role: "SALES",
     jobTitle: "Chargée de comptes", phone: "+225 05 90 33 17 05",
     password: "Commercial2026!", accentToken: "danger",
   },

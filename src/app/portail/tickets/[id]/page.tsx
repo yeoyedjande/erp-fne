@@ -18,6 +18,7 @@ export default async function PortalTicketDetail({
   const user = await requirePortalUser();
   const { id } = await params;
 
+  const org = await prisma.organization.findUnique({ where: { id: "org" } });
   const ticket = await prisma.ticket.findUnique({
     where: { id },
     include: {
@@ -74,8 +75,8 @@ export default async function PortalTicketDetail({
           <p className="border-t border-line bg-surface-2/40 px-5 py-4 text-sm text-ink-3">
             Pour compléter cette demande, répondez directement à l&apos;e-mail de suivi ou
             écrivez à{" "}
-            <a href="mailto:contact@markel-technology.ci" className="text-brand hover:underline">
-              contact@markel-technology.ci
+            <a href={`mailto:${org?.email ?? ""}`} className="text-brand hover:underline">
+              {org?.email ?? ""}
             </a>{" "}
             en rappelant le numéro {ticket.number}.
           </p>

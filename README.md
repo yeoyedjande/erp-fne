@@ -14,6 +14,10 @@ en trois éléments imposé par la procédure.
 
 ## Table d'accès
 
+> Les comptes internes utilisent le domaine réel **`@markel-tech.com`**. Un
+> déploiement antérieur au 10 septembre 2026 portait un domaine provisoire en
+> `.ci` : la migration `20260910120000` le bascule automatiquement.
+
 L'application n'est pas encore déployée : cette session ne dispose d'aucun
 identifiant Railway. La séquence de mise en ligne est donnée plus bas ; une fois
 exécutée, remplacez `<URL>` par le domaine attribué.
@@ -22,15 +26,15 @@ exécutée, remplacez `<URL>` par le domaine attribué.
 |---|---|---|---|---|
 | Site public | `<URL>/` | — | — | anonyme |
 | Vérification de facture | `<URL>/verification` | — | — | anonyme |
-| Administration | `<URL>/connexion` | `admin@markel-technology.ci` | `Admin2026!` | Super Admin |
-| Gestion | `<URL>/connexion` | `gestion@markel-technology.ci` | `Gestion2026!` | Gestionnaire |
-| Commercial | `<URL>/connexion` | `commercial@markel-technology.ci` | `Commercial2026!` | Commercial |
-| Support | `<URL>/connexion` | `support@markel-technology.ci` | `Support2026!` | Support |
+| Administration | `<URL>/connexion` | `admin@markel-tech.com` | `Admin2026!` | Super Admin |
+| Gestion | `<URL>/connexion` | `gestion@markel-tech.com` | `Gestion2026!` | Gestionnaire |
+| Commercial | `<URL>/connexion` | `commercial@markel-tech.com` | `Commercial2026!` | Commercial |
+| Support | `<URL>/connexion` | `support@markel-tech.com` | `Support2026!` | Support |
 | Portail client | `<URL>/portail` | `client@nsia-banque.ci` | `Client2026!` | Client (NSIA Banque) |
 
 Deux comptes secondaires partagent les mots de passe de leur rôle :
-`seydou.ouattara@markel-technology.ci` (Gestionnaire) et
-`nadia.bamba@markel-technology.ci` (Commercial).
+`seydou.ouattara@markel-tech.com` (Gestionnaire) et
+`nadia.bamba@markel-tech.com` (Commercial).
 
 > **Ces mots de passe sont assumés pour une démonstration.** Changez-les avant
 > tout usage réel : Administration → Utilisateurs → « Mot de passe ».
@@ -288,7 +292,8 @@ page public, les factures et les charges utiles transmises à la FNE. Elle se
 modifie depuis Administration → Identité de l'entreprise.
 
 Siège : Riviera Palmeraie, Immeuble Walebo 1, 3e étage, bureau 1D — Cocody,
-Abidjan, Côte d'Ivoire.
+Abidjan, Côte d'Ivoire. E-mail `info@markel-tech.com`, téléphone
+`+225 05 46 58 03 17`.
 
 ## Sécurité des dépendances
 

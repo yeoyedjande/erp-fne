@@ -6,10 +6,10 @@ import { Icon } from "@/components/ui/Icon";
 import { login, type LoginState } from "./actions";
 
 const DEMO_ACCOUNTS = [
-  { email: "admin@markel-technology.ci", password: "Admin2026!", name: "Yédjané Yeo", role: "Super Admin", scope: "Accès total, administration et clé API FNE" },
-  { email: "gestion@markel-technology.ci", password: "Gestion2026!", name: "Aïcha Koné", role: "Gestionnaire", scope: "Tout le métier, certification FNE comprise" },
-  { email: "commercial@markel-technology.ci", password: "Commercial2026!", name: "Bakary Traoré", role: "Commercial", scope: "Sociétés, pipeline, devis, activités" },
-  { email: "support@markel-technology.ci", password: "Support2026!", name: "Fatou Diallo", role: "Support", scope: "Tickets et suivi des engagements de service" },
+  { email: "admin@markel-tech.com", password: "Admin2026!", name: "Yédjané Yeo", role: "Super Admin", scope: "Accès total, administration et clé API FNE" },
+  { email: "gestion@markel-tech.com", password: "Gestion2026!", name: "Aïcha Koné", role: "Gestionnaire", scope: "Tout le métier, certification FNE comprise" },
+  { email: "commercial@markel-tech.com", password: "Commercial2026!", name: "Bakary Traoré", role: "Commercial", scope: "Sociétés, pipeline, devis, activités" },
+  { email: "support@markel-tech.com", password: "Support2026!", name: "Fatou Diallo", role: "Support", scope: "Tickets et suivi des engagements de service" },
   { email: "client@nsia-banque.ci", password: "Client2026!", name: "Marc-Aurèle N'Guessan", role: "Client", scope: "Portail client, périmètre NSIA Banque uniquement" },
 ];
 
@@ -29,7 +29,7 @@ function SubmitButton() {
 
 export function LoginForm({ suite }: { suite: string }) {
   const [state, formAction] = useActionState<LoginState, FormData>(login, {});
-  const [email, setEmail] = useState("admin@markel-technology.ci");
+  const [email, setEmail] = useState("admin@markel-tech.com");
   const [password, setPassword] = useState("Admin2026!");
   const [reveal, setReveal] = useState(false);
 
@@ -75,13 +75,28 @@ export function LoginForm({ suite }: { suite: string }) {
           </div>
 
           {state.error && (
-            <p
+            <div
               role="alert"
-              className="flex items-start gap-2 rounded-md border border-danger/15 bg-danger-soft px-3.5 py-2.5 text-base text-danger"
+              className={
+                state.infrastructure
+                  ? "rounded-md border border-warning/20 bg-warning-soft px-3.5 py-3 text-base text-warning"
+                  : "rounded-md border border-danger/15 bg-danger-soft px-3.5 py-2.5 text-base text-danger"
+              }
             >
-              <Icon name="warning" size={16} className="mt-0.5 shrink-0" />
-              {state.error}
-            </p>
+              <p className="flex items-start gap-2">
+                <Icon name="warning" size={16} className="mt-0.5 shrink-0" />
+                <span>{state.error}</span>
+              </p>
+              {state.infrastructure && (
+                <a
+                  href="/etat"
+                  className="mt-2 inline-flex items-center gap-1 pl-6 text-sm font-medium underline"
+                >
+                  Voir le diagnostic
+                  <Icon name="arrowRight" size={13} />
+                </a>
+              )}
+            </div>
           )}
 
           <SubmitButton />

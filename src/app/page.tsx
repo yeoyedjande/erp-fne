@@ -301,18 +301,18 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-wrap gap-3">
               <a
-                href="mailto:contact@markel-technology.ci"
+                href={`mailto:${org?.email ?? ""}`}
                 className="inline-flex h-11 items-center gap-2 rounded-md bg-white px-5 text-md font-medium text-brand-2 transition-colors hover:bg-white/90"
               >
                 <Icon name="mail" size={17} />
                 Nous écrire
               </a>
               <a
-                href="tel:+2252720314560"
+                href={`tel:${(org?.phone ?? "").replace(/\s/g, "")}`}
                 className="inline-flex h-11 items-center gap-2 rounded-md border border-white/25 px-5 text-md font-medium text-white transition-colors hover:bg-white/10"
               >
                 <Icon name="phone" size={17} />
-                +225 27 20 31 45 60
+                {org?.phone ?? ""}
               </a>
             </div>
           </div>

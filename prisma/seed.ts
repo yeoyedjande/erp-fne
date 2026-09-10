@@ -55,12 +55,12 @@ async function main() {
     });
     users[u.email] = { id: created.id, name: created.name };
   }
-  const admin = users["admin@markel-technology.ci"];
-  const manager = users["gestion@markel-technology.ci"];
-  const sales = users["commercial@markel-technology.ci"];
-  const sales2 = users["nadia.bamba@markel-technology.ci"];
-  const support = users["support@markel-technology.ci"];
-  const cto = users["seydou.ouattara@markel-technology.ci"];
+  const admin = users["admin@markel-tech.com"];
+  const manager = users["gestion@markel-tech.com"];
+  const sales = users["commercial@markel-tech.com"];
+  const sales2 = users["nadia.bamba@markel-tech.com"];
+  const support = users["support@markel-tech.com"];
+  const cto = users["seydou.ouattara@markel-tech.com"];
   const salesTeam = [sales, sales2, manager];
   console.log(`  Utilisateurs      · ${USERS.length} collaborateurs`);
 
