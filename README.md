@@ -159,12 +159,11 @@ Deux chemins. Le premier ne demande aucune ligne de commande.
 
 ### A. Depuis GitHub (recommandé)
 
-1. Poussez cette branche sur `yeoyedjande/erp-fne`.
-2. Sur [railway.com](https://railway.com) : **New Project → Deploy from GitHub repo**,
-   choisissez le dépôt et la branche.
-3. Dans le projet : **New → Database → Add PostgreSQL**. Railway injecte
+1. Sur [railway.com](https://railway.com) : **New Project → Deploy from GitHub repo**,
+   choisissez `yeoyedjande/erp-fne`, branche `main`.
+2. Dans le projet : **New → Database → Add PostgreSQL**. Railway injecte
    `DATABASE_URL` automatiquement dans le service applicatif.
-4. Onglet **Variables** du service applicatif :
+3. Onglet **Variables** du service applicatif :
 
    | Variable | Valeur |
    |---|---|
@@ -172,11 +171,11 @@ Deux chemins. Le premier ne demande aucune ligne de commande.
    | `AUTH_TRUST_HOST` | `true` |
    | `FNE_MODE` | `mock` |
    | `SEED_ON_DEPLOY` | `true` — **au premier déploiement seulement** |
-   | `NEXTAUTH_URL` | à renseigner à l'étape 6 |
+   | `NEXTAUTH_URL` | à renseigner à l'étape 5 |
 
-5. Onglet **Settings → Networking → Generate Domain**.
-6. Ajoutez `NEXTAUTH_URL=https://<votre-domaine>.up.railway.app`, puis redéployez.
-7. **Repassez `SEED_ON_DEPLOY` à `false`** (ou supprimez la variable) pour que les
+4. Onglet **Settings → Networking → Generate Domain**.
+5. Ajoutez `NEXTAUTH_URL=https://<votre-domaine>.up.railway.app`, puis redéployez.
+6. **Repassez `SEED_ON_DEPLOY` à `false`** (ou supprimez la variable) pour que les
    déploiements suivants ne rejouent plus le jeu de démonstration.
 
 `railway.json` déclare en pré-déploiement `prisma migrate deploy`, suivi du seed
