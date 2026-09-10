@@ -107,6 +107,7 @@ exactement l'écart `amount − vatAmount` de la réponse publiée par la DGI.
 | `FNE_BASE_URL` | `http://54.247.95.108/ws` | Environnement de test DGI, ou URL de production. |
 | `FNE_API_KEY` | — | Clé délivrée par la DGI après validation des spécimens. |
 | `FNE_VERIFICATION_BASE` | `http://54.247.95.108/fr/verification` | Base des URL de vérification. |
+| `SEED_ON_DEPLOY` | `false` | `true` rejoue le seed en pré-déploiement. À n'activer qu'au premier déploiement. |
 
 Le **simulateur n'est pas un bouchon** : il applique les mêmes validations que la
 plateforme (NCC obligatoire en B2B, devise et taux obligatoires en B2F, point de
@@ -154,6 +155,36 @@ d'un avoir — puis restaure l'état de démonstration.
 
 ## Déploiement sur Railway
 
+Deux chemins. Le premier ne demande aucune ligne de commande.
+
+### A. Depuis GitHub (recommandé)
+
+1. Poussez cette branche sur `yeoyedjande/erp-fne`.
+2. Sur [railway.com](https://railway.com) : **New Project → Deploy from GitHub repo**,
+   choisissez le dépôt et la branche.
+3. Dans le projet : **New → Database → Add PostgreSQL**. Railway injecte
+   `DATABASE_URL` automatiquement dans le service applicatif.
+4. Onglet **Variables** du service applicatif :
+
+   | Variable | Valeur |
+   |---|---|
+   | `AUTH_SECRET` | sortie de `openssl rand -base64 32` |
+   | `AUTH_TRUST_HOST` | `true` |
+   | `FNE_MODE` | `mock` |
+   | `SEED_ON_DEPLOY` | `true` — **au premier déploiement seulement** |
+   | `NEXTAUTH_URL` | à renseigner à l'étape 6 |
+
+5. Onglet **Settings → Networking → Generate Domain**.
+6. Ajoutez `NEXTAUTH_URL=https://<votre-domaine>.up.railway.app`, puis redéployez.
+7. **Repassez `SEED_ON_DEPLOY` à `false`** (ou supprimez la variable) pour que les
+   déploiements suivants ne rejouent plus le jeu de démonstration.
+
+`railway.json` déclare en pré-déploiement `prisma migrate deploy`, suivi du seed
+uniquement si `SEED_ON_DEPLOY=true`. Les migrations passent donc avant chaque
+démarrage, sans intervention.
+
+### B. Depuis votre poste, avec la CLI
+
 ```bash
 npm i -g @railway/cli
 railway login
@@ -163,30 +194,28 @@ railway add --database postgres          # la base AVANT le service
 
 railway variables --set "AUTH_SECRET=$(openssl rand -base64 32)" \
                   --set "AUTH_TRUST_HOST=true" \
-                  --set "FNE_MODE=mock"
+                  --set "FNE_MODE=mock" \
+                  --set "SEED_ON_DEPLOY=true"
 
-railway up                                # build + preDeployCommand (migrate deploy)
+railway up                                # build + migrations + seed
 railway domain                            # attribue le domaine public
 
-# Le seed s'exécute une fois, contre la base Railway :
-railway run npm run db:seed
-
-# Renseignez enfin l'URL publique obtenue :
-railway variables --set "NEXTAUTH_URL=https://<domaine>.up.railway.app"
+railway variables --set "NEXTAUTH_URL=https://<domaine>.up.railway.app" \
+                  --set "SEED_ON_DEPLOY=false"
 railway redeploy
 ```
 
-`DATABASE_URL` est injectée automatiquement par Railway lorsque la base est
-attachée au projet. `railway.json` déclare `prisma migrate deploy` en
-pré-déploiement : les migrations passent avant chaque démarrage.
-
-Pour passer la conformité FNE en production, ajoutez :
+### Passage de la conformité FNE en production
 
 ```bash
-railway variables --set "FNE_MODE=live" \
-                  --set "FNE_BASE_URL=<url de production DGI>" \
-                  --set "FNE_API_KEY=<clé de votre espace FNE>"
+FNE_MODE=live
+FNE_BASE_URL=<url de production transmise par la DGI>
+FNE_API_KEY=<clé de votre espace FNE, onglet « Paramétrage »>
 ```
+
+La clé n'est délivrée qu'après validation de vos spécimens de factures par la
+DGI (`support.fne@dgi.gouv.ci`). Tant que `FNE_MODE` vaut `mock`, aucune donnée
+ne quitte le serveur.
 
 ---
 
